@@ -1,25 +1,49 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import SwapiHero from "./components/SwapiHero";
+import axios from 'axios';
+import debounce from 'lodash.debounce';
 
-function App() {
+function HomePage() { // - компонент
+  let [input, setInput] = useState('');
+  let [data, setData] = useState([])// data - переменная состояния(начальное состояние), setData - функция изменения состояния
+  function makeSwapiRequests() {
+    axios({
+      method: "get",
+      url: "https://swapi.dev/api/people/?search=" + input,
+      // params: {
+      //   _limit: 5
+      // }
+    })
+      .then(res => {
+       var response= res.data.results;
+        setData(response)
+          
+      })
+  }
+  useEffect(() => { //эффекты выполняются после каждого рендера, только после изменения DOM
+  makeSwapiRequests()
+  }, [])
+
+  // <div>{JSON.stringify(data)}</div>
+  function searchHero(event) {
+    const { value } = event.target;
+    setInput(value.toLowerCase());
+    // debounce(makeSwapiRequests,1000);
+    makeSwapiRequests()
+    
+  }
+ console.log(data)
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+      <div><input onChange={searchHero} placeholder="Hero name:" /></div>
+      {data
+      // .filter(item => item.name.toLowerCase().includes(input))
+      .map(({ name }) => {
+        return (
+          <SwapiHero onClick={() => setData(name)} key={name} name={name}></SwapiHero>
+        )
+      })}
+    </div>)
+};
+export default HomePage;
 
-export default App;
