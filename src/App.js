@@ -1,48 +1,40 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import SwapiHero from "./components/SwapiHero";
 import axios from 'axios';
-import debounce from 'lodash.debounce';
 
 function HomePage() { // - компонент
-  let [input, setInput] = useState('');
-  let [data, setData] = useState([])// data - переменная состояния(начальное состояние), setData - функция изменения состояния
-  function makeSwapiRequests() {
+  const [input, setInput] = useState('');
+  const [hero, setHero] = useState(''); // для данных о герое
+  const [data, setData] = useState([])// data - переменная состояния(начальное состояние), setData - функция изменения состояния
+  function makeSwapiRequests() { // как вариант обернуть в промис?????
     axios({
       method: "get",
       url: "https://swapi.dev/api/people/?search=" + input,
-      // params: {
-      //   _limit: 5
-      // }
     })
-      .then(res => {
-       var response= res.data.results;
-        setData(response)
-          
-      })
+      .then(res => setData(res.data.results))
   }
   useEffect(() => { //эффекты выполняются после каждого рендера, только после изменения DOM
-  makeSwapiRequests()
-  }, [])
-
-  // <div>{JSON.stringify(data)}</div>
+    makeSwapiRequests()
+  }, [input])
   function searchHero(event) {
     const { value } = event.target;
     setInput(value.toLowerCase());
-    // debounce(makeSwapiRequests,1000);
-    makeSwapiRequests()
-    
   }
- console.log(data)
+  function handleSwapiHero(name){ //обрабатываем клик
+    setInput(name);
+    const dataFind = data.find((element) => element.name === name); // ищем в массиве объект с нашим героем
+    setHero(JSON.stringify(dataFind));
+  }
   return (
     <div className="App">
-      <div><input onChange={searchHero} placeholder="Hero name:" /></div>
+      <div><input onChange={searchHero}  placeholder="Hero name:" /></div>
       {data
-      // .filter(item => item.name.toLowerCase().includes(input))
-      .map(({ name }) => {
-        return (
-          <SwapiHero onClick={() => setData(name)} key={name} name={name}></SwapiHero>
-        )
-      })}
+        .map(({ name }) => {
+          return (
+            <SwapiHero onClick={() => handleSwapiHero(name)} key={name} name={name}></SwapiHero>
+          )
+        })}
+        <div>{hero}</div>
     </div>)
 };
 export default HomePage;
